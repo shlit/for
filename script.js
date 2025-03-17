@@ -19,5 +19,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Clear the input
         postInput.value = "";
+        document.addEventListener("DOMContentLoaded", async () => {
+    const container = document.getElementById("posts-container");
+
+    // Fetch comments stored in the GitHub repository
+    async function fetchPosts() {
+        const response = await fetch(
+            "https://raw.githubusercontent.com/<username>/<repo>/main/_data/comments"
+        );
+        const data = await response.json();
+
+        // Sort and display the posts
+        container.innerHTML = "";
+        data.forEach(post => {
+            const postElement = document.createElement("div");
+
     });
 });
