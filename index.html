@@ -14,10 +14,14 @@
         <div id="posts-container">
             <!-- Forum posts will be dynamically added here -->
         </div>
-        <form id="post-form">
-            <textarea id="post-input" placeholder="Write your post..." required></textarea>
-            <button type="submit">Post</button>
-        </form>
+       <form
+  action="https://api.staticman.net/v3/entry/github/<username>/<repo>/main"
+  method="POST">
+  <textarea name="message" placeholder="Write your post..." required></textarea>
+  <input type="text" name="author" placeholder="Your name" required>
+  <button type="submit">Submit</button>
+</form>
+
     </main>
     <script src="script.js"></script>
 </body>
