@@ -1,28 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forum</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Raytracing Game</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>Welcome to the Forum</h1>
-    </header>
-    <main>
-        <div id="posts-container">
-            <!-- Forum posts will be dynamically added here -->
-        </div>
-       <form
-  action="https://api.staticman.net/v3/entry/github/<username>/<repo>/main"
-  method="POST">
-  <textarea name="message" placeholder="Write your post..." required></textarea>
-  <input type="text" name="author" placeholder="Your name" required>
-  <button type="submit">Submit</button>
-</form>
-
-    </main>
-    <script src="script.js"></script>
+  <canvas id="gameCanvas"></canvas>
+  <script src="ably.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
