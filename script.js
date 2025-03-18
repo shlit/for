@@ -1,38 +1,20 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("post-form");
-    const postsContainer = document.getElementById("posts-container");
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-    form.addEventListener("submit", (event) => {
-        event.preventDefault();
+// Canvas dimensions
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-        // Get the input value
-        const postInput = document.getElementById("post-input");
-        const postText = postInput.value;
+// Basic raytracing setup
+function renderScene() {
+  for (let y = 0; y < canvas.height; y++) {
+    for (let x = 0; x < canvas.width; x++) {
+      // Simple color gradient
+      const color = Math.floor((x / canvas.width) * 255);
+      ctx.fillStyle = `rgb(${color}, ${color}, 255)`;
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+}
 
-        // Create a new post element
-        const post = document.createElement("div");
-        post.classList.add("post");
-        post.textContent = postText;
-
-        // Append the new post to the container
-        postsContainer.appendChild(post);
-
-        // Clear the input
-        postInput.value = "";
-        document.addEventListener("DOMContentLoaded", async () => {
-    const container = document.getElementById("posts-container");
-
-    // Fetch comments stored in the GitHub repository
-    async function fetchPosts() {
-        const response = await fetch(
-            "https://raw.githubusercontent.com/<username>/<repo>/main/_data/comments"
-        );
-        const data = await response.json();
-
-        // Sort and display the posts
-        container.innerHTML = "";
-        data.forEach(post => {
-            const postElement = document.createElement("div");
-
-    });
-});
+renderScene();
