@@ -1,1 +1,89 @@
-const canvas=document.getElementById("gameCanvas"),ctx=canvas.getContext("2d");canvas.width=window.innerWidth,canvas.height=window.innerHeight;class Sphere{constructor(e,t){this.center=e,this.radius=t}intersect(e,t){let a={x:e.x-this.center.x,y:e.y-this.center.y,z:e.z-this.center.z},r=dot(t,t),n=2*dot(a,t),c=dot(a,a)-this.radius*this.radius,s=n*n-4*r*c;return s>0?(-n-Math.sqrt(s))/(2*r):null}}function dot(e,t){return e.x*t.x+e.y*t.y+e.z*t.z}const spheres=[new Sphere({x:0,y:0,z:3},1),new Sphere({x:-1.5,y:0,z:5},1),];let camera={x:0,y:0,z:0};function renderScene(){let e=canvas.width,t=canvas.height;for(let a=0;a<t;a++)for(let r=0;r<e;r++){let n={x:r/e*2-1,y:1-a/t*2,z:1},c=1/0,s=0;for(let i of spheres){let o=i.intersect(camera,n);null!==o&&o<c&&(c=o,s=Math.max(0,255-50*o))}ctx.fillStyle=`rgb(${s}, ${s}, ${s})`,ctx.fillRect(r,a,1,1)}}function gameLoop(){ctx.clearRect(0,0,canvas.width,canvas.height),renderScene(),requestAnimationFrame(gameLoop)}document.addEventListener("keydown",e=>{"w"===e.key&&(camera.z-=.1),"s"===e.key&&(camera.z+=.1),"a"===e.key&&(camera.x-=.1),"d"===e.key&&(camera.x+=.1),"ArrowUp"===e.key&&(camera.y+=.1),"ArrowDown"===e.key&&(camera.y-=.1)}),gameLoop();
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+class Sphere {
+  constructor(center, radius) {
+    this.center = center;
+    this.radius = radius;
+  }
+
+  intersect(rayOrigin, rayDirection) {
+    const oc = {
+      x: rayOrigin.x - this.center.x,
+      y: rayOrigin.y - this.center.y,
+      z: rayOrigin.z - this.center.z,
+    };
+    const a = dot(rayDirection, rayDirection);
+    const b = 2.0 * dot(oc, rayDirection);
+    const c = dot(oc, oc) - this.radius * this.radius;
+    const discriminant = b * b - 4 * a * c;
+
+    if (discriminant > 0) {
+      return (-b - Math.sqrt(discriminant)) / (2.0 * a);
+    }
+    return null;
+  }
+}
+
+function dot(v1, v2) {
+  return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
+const spheres = [
+  new Sphere({ x: 0, y: 0, z: 3 }, 1),
+  new Sphere({ x: -1.5, y: 0, z: 5 }, 1),
+];
+
+let camera = { x: 0, y: 0, z: 0 };
+
+function renderScene() {
+  const renderScale = 0.2; 
+  const imageWidth = Math.floor(canvas.width * renderScale);
+  const imageHeight = Math.floor(canvas.height * renderScale);
+  const pixelSize = Math.floor(1 / renderScale);
+
+  for (let y = 0; y < imageHeight; y++) {
+    for (let x = 0; x < imageWidth; x++) {
+      const rayDirection = {
+        x: (x / imageWidth) * 2 - 1,
+        y: 1 - (y / imageHeight) * 2,
+        z: 1,
+      };
+
+      let closestDistance = Infinity;
+      let shade = 0;
+
+      for (const sphere of spheres) {
+        const distance = sphere.intersect(camera, rayDirection);
+        if (distance !== null && distance < closestDistance) {
+          closestDistance = distance;
+          shade = Math.max(0, 255 - distance * 50);
+        }
+      }
+
+      ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
+      ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+    }
+  }
+}
+
+document.addEventListener('keydown', (event) => {
+  const moveStep = 0.1;
+  if (event.key === 'w') camera.z -= moveStep;
+  if (event.key === 's') camera.z += moveStep;
+  if (event.key === 'a') camera.x -= moveStep;
+  if (event.key === 'd') camera.x += moveStep;
+  if (event.key === 'ArrowUp') camera.y += moveStep;
+  if (event.key === 'ArrowDown') camera.y -= moveStep;
+});
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  renderScene();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
