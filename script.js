@@ -4,6 +4,7 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+// Classes for different shapes
 class Sphere {
   constructor(center, radius) {
     this.center = center;
@@ -28,79 +29,155 @@ class Sphere {
   }
 }
 
-class Plane {
-  constructor(normal, point, color) {
-    this.normal = normal;
-    this.point = point;
+class Triangle {
+  constructor(vertices, color) {
+    this.vertices = vertices; // Array of 3 points: [{x, y, z}, {x, y, z}, {x, y, z}]
     this.color = color;
   }
 
   intersect(rayOrigin, rayDirection) {
-    const denom = dot(this.normal, rayDirection);
-    if (Math.abs(denom) > 1e-6) {
-      const difference = {
-        x: this.point.x - rayOrigin.x,
-        y: this.point.y - rayOrigin.y,
-        z: this.point.z - rayOrigin.z,
-      };
-      const t = dot(difference, this.normal) / denom;
-      return t > 0 ? t : null;
-    }
-    return null;
+    const [v0, v1, v2] = this.vertices;
+
+    const edge1 = {
+      x: v1.x - v0.x,
+      y: v1.y - v0.y,
+      z: v1.z - v0.z,
+    };
+    const edge2 = {
+      x: v2.x - v0.x,
+      y: v2.y - v0.y,
+      z: v2.z - v0.z,
+    };
+    const h = cross(rayDirection, edge2);
+    const a = dot(edge1, h);
+
+    if (Math.abs(a) < 1e-6) return null;
+
+    const f = 1 / a;
+    const s = {
+      x: rayOrigin.x - v0.x,
+      y: rayOrigin.y - v0.y,
+      z: rayOrigin.z - v0.z,
+    };
+    const u = f * dot(s, h);
+
+    if (u < 0 || u > 1) return null;
+
+    const q = cross(s, edge1);
+    const v = f * dot(rayDirection, q);
+
+    if (v < 0 || u + v > 1) return null;
+
+    const t = f * dot(edge2, q);
+    return t > 0 ? t : null;
   }
 }
 
+class Square {
+  constructor(center, size, color) {
+    const half = size / 2;
+    this.triangles = [
+      new Triangle(
+        [
+          { x: center.x - half, y: center.y, z: center.z - half },
+          { x: center.x + half, y: center.y, z: center.z - half },
+          { x: center.x + half, y: center.y, z: center.z + half },
+        ],
+        color
+      ),
+      new Triangle(
+        [
+          { x: center.x - half, y: center.y, z: center.z - half },
+          { x: center.x + half, y: center.y, z: center.z + half },
+          { x: center.x - half, y: center.y, z: center.z + half },
+        ],
+        color
+      ),
+    ];
+  }
+
+  intersect(rayOrigin, rayDirection) {
+    let closestDistance = null;
+
+    for (const triangle of this.triangles) {
+      const distance = triangle.intersect(rayOrigin, rayDirection);
+      if (distance !== null && (closestDistance === null || distance < closestDistance)) {
+        closestDistance = distance;
+      }
+    }
+
+    return closestDistance;
+  }
+}
+
+// Utility functions
 function dot(v1, v2) {
   return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
-const spheres = [
-  new Sphere({ x: 0, y: 0, z: 3 }, 1),
-  new Sphere({ x: -1.5, y: 0, z: 5 }, 1),
-];
-
-const floor = new Plane(
-  { x: 0, y: 1, z: 0 },
-  { x: 0, y: -1, z: 0 },
-  { r: 150, g: 150, b: 150 }
-);
-
-let camera = { x: 0, y: 1.5, z: 0 }; // Start slightly above the floor
-let yaw = 0;
-let pitch = 0;
-
-function rotateRay(ray, yaw, pitch) {
-  const cosYaw = Math.cos(yaw);
-  const sinYaw = Math.sin(yaw);
-  const cosPitch = Math.cos(pitch);
-  const sinPitch = Math.sin(pitch);
-
+function cross(v1, v2) {
   return {
-    x: ray.x * cosYaw + ray.z * sinYaw,
-    y: ray.y * cosPitch - ray.z * sinPitch,
-    z: -ray.x * sinYaw + ray.z * cosYaw,
+    x: v1.y * v2.z - v1.z * v2.y,
+    y: v1.z * v2.x - v1.x * v2.z,
+    z: v1.x * v2.y - v1.y * v2.x,
   };
 }
 
-function moveCamera(direction, step) {
-  const forward = { x: Math.sin(yaw), y: 0, z: Math.cos(yaw) };
-  const right = { x: Math.cos(yaw), y: 0, z: -Math.sin(yaw) };
+// Generate random shapes
+function generateRandomShapes() {
+  const shapes = [];
+  const numShapes = 10;
 
-  if (direction === "forward") {
-    camera.x += forward.x * step;
-    camera.z += forward.z * step;
-  } else if (direction === "backward") {
-    camera.x -= forward.x * step;
-    camera.z -= forward.z * step;
-  } else if (direction === "left") {
-    camera.x -= right.x * step;
-    camera.z -= right.z * step;
-  } else if (direction === "right") {
-    camera.x += right.x * step;
-    camera.z += right.z * step;
+  for (let i = 0; i < numShapes; i++) {
+    const type = Math.random();
+
+    if (type < 0.33) {
+      shapes.push(
+        new Sphere(
+          {
+            x: Math.random() * 10 - 5,
+            y: Math.random() * 5 - 2.5,
+            z: Math.random() * 10 + 2,
+          },
+          Math.random() * 1 + 0.5
+        )
+      );
+    } else if (type < 0.66) {
+      shapes.push(
+        new Triangle(
+          [
+            { x: Math.random() * 10 - 5, y: Math.random() * 5 - 2.5, z: Math.random() * 10 + 2 },
+            { x: Math.random() * 10 - 5, y: Math.random() * 5 - 2.5, z: Math.random() * 10 + 2 },
+            { x: Math.random() * 10 - 5, y: Math.random() * 5 - 2.5, z: Math.random() * 10 + 2 },
+          ],
+          { r: 255, g: 0, b: 0 }
+        )
+      );
+    } else {
+      shapes.push(
+        new Square(
+          {
+            x: Math.random() * 10 - 5,
+            y: Math.random() * 5 - 2.5,
+            z: Math.random() * 10 + 2,
+          },
+          Math.random() * 2 + 1,
+          { r: 0, g: 255, b: 0 }
+        )
+      );
+    }
   }
+
+  return shapes;
 }
 
+// Scene setup
+const camera = { x: 0, y: 0, z: 0 };
+let yaw = 0;
+let pitch = 0;
+const shapes = generateRandomShapes();
+
+// Rendering logic
 function renderScene() {
   const renderScale = 0.3;
   const imageWidth = Math.floor(canvas.width * renderScale);
@@ -120,21 +197,12 @@ function renderScene() {
       let closestDistance = Infinity;
       let color = { r: 0, g: 0, b: 0 };
 
-      for (const sphere of spheres) {
-        const distance = sphere.intersect(camera, rotatedRay);
+      for (const shape of shapes) {
+        const distance = shape.intersect(camera, rotatedRay);
         if (distance !== null && distance < closestDistance) {
           closestDistance = distance;
-          const shade = Math.max(0, 255 - distance * 50);
-          color = { r: shade, g: shade, b: shade };
+          color = shape.color || { r: 255, g: 255, b: 255 };
         }
-      }
-
-      const floorDistance = floor.intersect(camera, rotatedRay);
-      if (floorDistance !== null && floorDistance < closestDistance) {
-        closestDistance = floorDistance;
-        const checker = Math.floor(camera.x + rotatedRay.x * floorDistance) % 2;
-        const shade = checker === 0 ? 120 : 90;
-        color = { r: shade, g: shade, b: shade };
       }
 
       ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
@@ -143,14 +211,27 @@ function renderScene() {
   }
 }
 
+function rotateRay(ray, yaw, pitch) {
+  const cosYaw = Math.cos(yaw);
+  const sinYaw = Math.sin(yaw);
+  const cosPitch = Math.cos(pitch);
+  const sinPitch = Math.sin(pitch);
+
+  return {
+    x: ray.x * cosYaw + ray.z * sinYaw,
+    y: ray.y * cosPitch - ray.z * sinPitch,
+    z: -ray.x * sinYaw + ray.z * cosYaw,
+  };
+}
+
 document.addEventListener("keydown", (event) => {
   const moveStep = 0.2;
   const rotationStep = 0.05;
 
-  if (event.key === "w") moveCamera("forward", moveStep);
-  if (event.key === "s") moveCamera("backward", moveStep);
-  if (event.key === "a") moveCamera("left", moveStep);
-  if (event.key === "d") moveCamera("right", moveStep);
+  if (event.key === "s") camera.z -= moveStep;
+  if (event.key === "w") camera.z += moveStep;
+  if (event.key === "a") camera.x -= moveStep;
+  if (event.key === "d") camera.x += moveStep;
   if (event.key === "ArrowLeft") yaw -= rotationStep;
   if (event.key === "ArrowRight") yaw += rotationStep;
   if (event.key === "ArrowUp") pitch = Math.max(-Math.PI / 2, pitch - rotationStep);
