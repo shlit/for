@@ -69,9 +69,9 @@ let camera = { x: 0, y: 2, z: 0 }; // Start slightly above the floor
 let yaw = 0;
 let pitch = 0;
 
-const gravity = -0.02; // Downward force
-const jumpStrength = 0.5; // Initial upward velocity when jumping
-let velocityY = 0; // Camera's vertical velocity
+const gravity = -0.02;
+const jumpStrength = 0.5;
+let velocityY = 0;
 let isGrounded = true;
 
 function rotateRay(ray, yaw, pitch) {
@@ -109,10 +109,8 @@ function moveCamera(direction, step) {
 function applyGravity() {
   velocityY += gravity;
 
-  // Simulate vertical movement with gravity
   camera.y += velocityY;
 
-  // Stop falling if hitting the floor
   if (camera.y <= 1.5) {
     camera.y = 1.5;
     velocityY = 0;
@@ -122,13 +120,41 @@ function applyGravity() {
 
 function jump() {
   if (isGrounded) {
-    velocityY = jumpStrength; // Apply upward force
+    velocityY = jumpStrength;
     isGrounded = false;
   }
 }
 
+function drawCompass() {
+  const compassSize = 100;
+  const centerX = 50;
+  const centerY = 50;
+  ctx.save();
+
+  ctx.translate(centerX, centerY);
+  ctx.rotate(-yaw);
+
+  ctx.beginPath();
+  ctx.moveTo(0, -compassSize / 2);
+  ctx.lineTo(-10, -compassSize / 2 + 20);
+  ctx.lineTo(10, -compassSize / 2 + 20);
+  ctx.closePath();
+  ctx.fillStyle = "red";
+  ctx.fill();
+
+  ctx.font = "14px Arial";
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.fillText("N", 0, -compassSize / 2 - 10);
+  ctx.fillText("E", compassSize / 2 - 10, 5);
+  ctx.fillText("S", 0, compassSize / 2 + 20);
+  ctx.fillText("W", -compassSize / 2 + 10, 5);
+
+  ctx.restore();
+}
+
 function renderScene() {
-  const renderScale = 0.3;
+  const renderScale = 0.5;
   const imageWidth = Math.floor(canvas.width * renderScale);
   const imageHeight = Math.floor(canvas.height * renderScale);
   const pixelSize = Math.floor(1 / renderScale);
@@ -167,6 +193,8 @@ function renderScene() {
       ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
     }
   }
+
+  drawCompass();
 }
 
 document.addEventListener("keydown", (event) => {
@@ -181,11 +209,11 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "ArrowRight") yaw += rotationStep;
   if (event.key === "ArrowUp") pitch = Math.max(-Math.PI / 2, pitch - rotationStep);
   if (event.key === "ArrowDown") pitch = Math.min(Math.PI / 2, pitch + rotationStep);
-  if (event.key === " ") jump(); // Spacebar to jump
+  if (event.key === " ") jump();
 });
 
 function gameLoop() {
-  applyGravity(); // Simulate gravity
+  applyGravity();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   renderScene();
   requestAnimationFrame(gameLoop);
