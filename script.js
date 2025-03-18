@@ -60,14 +60,14 @@ const spheres = [
 ];
 
 const floor = new Plane(
-  { x: 0, y: 1, z: 0 }, // Normal vector pointing upward
-  { x: 0, y: -1, z: 0 }, // Point on the plane
-  { r: 100, g: 100, b: 100 } // Grayscale color
+  { x: 0, y: 1, z: 0 },
+  { x: 0, y: -1, z: 0 },
+  { r: 120, g: 120, b: 120 }
 );
 
 let camera = { x: 0, y: 0, z: 0 };
-let yaw = 0; 
-let pitch = 0; 
+let yaw = 0;
+let pitch = 0;
 
 function rotateRay(ray, yaw, pitch) {
   const cosYaw = Math.cos(yaw);
@@ -75,17 +75,34 @@ function rotateRay(ray, yaw, pitch) {
   const cosPitch = Math.cos(pitch);
   const sinPitch = Math.sin(pitch);
 
-  const rotated = {
+  return {
     x: ray.x * cosYaw + ray.z * sinYaw,
     y: ray.y * cosPitch - ray.z * sinPitch,
     z: -ray.x * sinYaw + ray.z * cosYaw,
   };
+}
 
-  return rotated;
+function moveCamera(direction, step) {
+  const dx = Math.cos(yaw) * step;
+  const dz = Math.sin(yaw) * step;
+
+  if (direction === "forward") {
+    camera.x += dx;
+    camera.z += dz;
+  } else if (direction === "backward") {
+    camera.x -= dx;
+    camera.z -= dz;
+  } else if (direction === "left") {
+    camera.x -= dz; // Perpendicular movement
+    camera.z += dx;
+  } else if (direction === "right") {
+    camera.x += dz;
+    camera.z -= dx;
+  }
 }
 
 function renderScene() {
-  const renderScale = 0.2;
+  const renderScale = 0.3; // Optimized resolution
   const imageWidth = Math.floor(canvas.width * renderScale);
   const imageHeight = Math.floor(canvas.height * renderScale);
   const pixelSize = Math.floor(1 / renderScale);
@@ -101,42 +118,45 @@ function renderScene() {
       const rotatedRay = rotateRay(rayDirection, yaw, pitch);
 
       let closestDistance = Infinity;
-      let shade = 0;
+      let color = { r: 0, g: 0, b: 0 };
 
       for (const sphere of spheres) {
         const distance = sphere.intersect(camera, rotatedRay);
         if (distance !== null && distance < closestDistance) {
           closestDistance = distance;
-          shade = Math.max(0, 255 - distance * 50);
+          const shade = Math.max(0, 255 - distance * 50);
+          color = { r: shade, g: shade, b: shade };
         }
       }
 
       const floorDistance = floor.intersect(camera, rotatedRay);
       if (floorDistance !== null && floorDistance < closestDistance) {
         closestDistance = floorDistance;
-        const checkerboardPattern =
-          Math.floor(rotatedRay.x * 2 + floorDistance) % 2 === 0 ? 200 : 100;
-        shade = checkerboardPattern; // Checkerboard effect for the floor
+        const gradient = Math.abs(
+          Math.floor(rotatedRay.x + rotatedRay.z) % 2
+        );
+        const shade = 80 + gradient * 50; // Smooth gradient for the floor
+        color = { r: shade, g: shade, b: shade };
       }
 
-      ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
+      ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
       ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
     }
   }
 }
 
-document.addEventListener('keydown', (event) => {
-  const moveStep = 0.1;
+document.addEventListener("keydown", (event) => {
+  const moveStep = 0.2;
   const rotationStep = 0.05;
 
-  if (event.key === 's') camera.z -= moveStep;
-  if (event.key === 'w') camera.z += moveStep;
-  if (event.key === 'a') camera.x -= moveStep;
-  if (event.key === 'd') camera.x += moveStep;
-  if (event.key === 'ArrowUp') pitch = Math.max(-Math.PI / 2, pitch - rotationStep);
-  if (event.key === 'ArrowDown') pitch = Math.min(Math.PI / 2, pitch + rotationStep);
-  if (event.key === 'ArrowLeft') yaw -= rotationStep;
-  if (event.key === 'ArrowRight') yaw += rotationStep;
+  if (event.key === "w") moveCamera("forward", moveStep);
+  if (event.key === "s") moveCamera("backward", moveStep);
+  if (event.key === "a") moveCamera("left", moveStep);
+  if (event.key === "d") moveCamera("right", moveStep);
+  if (event.key === "ArrowLeft") yaw -= rotationStep;
+  if (event.key === "ArrowRight") yaw += rotationStep;
+  if (event.key === "ArrowUp") pitch = Math.max(-Math.PI / 2, pitch - rotationStep);
+  if (event.key === "ArrowDown") pitch = Math.min(Math.PI / 2, pitch + rotationStep);
 });
 
 function gameLoop() {
