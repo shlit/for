@@ -62,10 +62,10 @@ const spheres = [
 const floor = new Plane(
   { x: 0, y: 1, z: 0 },
   { x: 0, y: -1, z: 0 },
-  { r: 120, g: 120, b: 120 }
+  { r: 150, g: 150, b: 150 }
 );
 
-let camera = { x: 0, y: 0, z: 0 };
+let camera = { x: 0, y: 1.5, z: 0 }; // Start slightly above the floor
 let yaw = 0;
 let pitch = 0;
 
@@ -83,26 +83,26 @@ function rotateRay(ray, yaw, pitch) {
 }
 
 function moveCamera(direction, step) {
-  const dx = Math.cos(yaw) * step;
-  const dz = Math.sin(yaw) * step;
+  const forward = { x: Math.sin(yaw), y: 0, z: Math.cos(yaw) };
+  const right = { x: Math.cos(yaw), y: 0, z: -Math.sin(yaw) };
 
   if (direction === "forward") {
-    camera.x += dx;
-    camera.z += dz;
+    camera.x += forward.x * step;
+    camera.z += forward.z * step;
   } else if (direction === "backward") {
-    camera.x -= dx;
-    camera.z -= dz;
+    camera.x -= forward.x * step;
+    camera.z -= forward.z * step;
   } else if (direction === "left") {
-    camera.x -= dz; // Perpendicular movement
-    camera.z += dx;
+    camera.x -= right.x * step;
+    camera.z -= right.z * step;
   } else if (direction === "right") {
-    camera.x += dz;
-    camera.z -= dx;
+    camera.x += right.x * step;
+    camera.z += right.z * step;
   }
 }
 
 function renderScene() {
-  const renderScale = 0.3; // Optimized resolution
+  const renderScale = 0.3;
   const imageWidth = Math.floor(canvas.width * renderScale);
   const imageHeight = Math.floor(canvas.height * renderScale);
   const pixelSize = Math.floor(1 / renderScale);
@@ -132,10 +132,8 @@ function renderScene() {
       const floorDistance = floor.intersect(camera, rotatedRay);
       if (floorDistance !== null && floorDistance < closestDistance) {
         closestDistance = floorDistance;
-        const gradient = Math.abs(
-          Math.floor(rotatedRay.x + rotatedRay.z) % 2
-        );
-        const shade = 80 + gradient * 50; // Smooth gradient for the floor
+        const checker = Math.floor(camera.x + rotatedRay.x * floorDistance) % 2;
+        const shade = checker === 0 ? 120 : 90;
         color = { r: shade, g: shade, b: shade };
       }
 
