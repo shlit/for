@@ -154,7 +154,7 @@ function drawCompass() {
 }
 
 function renderScene() {
-  const renderScale = 10;
+  const renderScale = 0.2;
   const imageWidth = Math.floor(canvas.width * renderScale);
   const imageHeight = Math.floor(canvas.height * renderScale);
   const pixelSize = Math.floor(1 / renderScale);
