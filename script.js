@@ -70,7 +70,7 @@ let yaw = 0;
 let pitch = 0;
 
 const gravity = -0.02;
-const jumpStrength = 0.5;
+const jumpStrength = 0.2;
 let velocityY = 0;
 let isGrounded = true;
 
@@ -154,7 +154,7 @@ function drawCompass() {
 }
 
 function renderScene() {
-  const renderScale = 1;
+  const renderScale = 0.05;
   const imageWidth = Math.floor(canvas.width * renderScale);
   const imageHeight = Math.floor(canvas.height * renderScale);
   const pixelSize = Math.floor(1 / renderScale);
