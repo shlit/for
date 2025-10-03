@@ -1,8 +1,12 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+
+
+let renderScale = 1.0; 
 
 class Sphere {
   constructor(center, radius) {
@@ -126,7 +130,6 @@ function jump() {
 
 let lastFrameTime = performance.now();
 let fps = 60;
-let renderScale = 0.2;
 
 function updateFPS() {
   const now = performance.now();
@@ -135,18 +138,24 @@ function updateFPS() {
   fps = 1000 / deltaTime;
 }
 
+
+let useDynamicScale = false;
 function adjustRenderScale() {
-  if (fps < 30) {
-    renderScale = Math.max(0.1, renderScale - 0.02);
-  } else if (fps > 50) {
-    renderScale = Math.min(0.5, renderScale + 0.02);
+  if (useDynamicScale) {
+    if (fps < 30) {
+      renderScale = Math.max(0.1, renderScale - 0.02);
+    } else if (fps > 50) {
+      renderScale = Math.min(1.0, renderScale + 0.02);
+    }
   }
 }
 
 function renderScene() {
+  
   const imageWidth = Math.floor(canvas.width * renderScale);
   const imageHeight = Math.floor(canvas.height * renderScale);
-  const pixelSize = Math.ceil(1 / renderScale);
+  const imgData = ctx.createImageData(imageWidth, imageHeight);
+  const pix = imgData.data;
 
   for (let y = 0; y < imageHeight; y++) {
     for (let x = 0; x < imageWidth; x++) {
@@ -178,9 +187,18 @@ function renderScene() {
         color = { r: shade, g: shade, b: shade };
       }
 
-      ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
-      ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+    
+      const idx = (y * imageWidth + x) * 4;
+      pix[idx] = color.r;
+      pix[idx + 1] = color.g;
+      pix[idx + 2] = color.b;
+      pix[idx + 3] = 255;
     }
+  }
+  
+  ctx.putImageData(imgData, 0, 0);
+  if (renderScale !== 1.0) {
+    ctx.drawImage(canvas, 0, 0, imageWidth, imageHeight, 0, 0, canvas.width, canvas.height);
   }
 }
 
