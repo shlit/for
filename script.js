@@ -6,7 +6,7 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 
-let renderScale = 1.0; 
+let renderScale = 0.3; 
 
 class Sphere {
   constructor(center, radius) {
